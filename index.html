@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>simple chat</title>
+</head>
+<body>
+<div id="msgs">
+  <div>hey</div>
+  <div>cool</div>
+</div>
+<input type="text" id="newMsg">
+<!--
+<input type="button" value="send" onclick="addMessage();">
+-->
+<input type="button" value="talk" id="talk">
+<input type="button" value="yell" id="yell">
+<script src="script.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+  var socket = io();
+
+  $('#talk').click(function(){
+    socket.emit('talk', $('#newMsg').val());
+
+    var msg = $('#newMsg').val();
+    $('#msgs').append($('<div>').text(msg));
+
+    $('#newMsg').val(''); // clear the input field
+
+    return false;
+  });
+
+  $('#yell').click(function(){
+    socket.emit('yell', $('#newMsg').val());
+    $('#newMsg').val('');
+    return false;
+  });
+
+  socket.on('talk', function(msg){
+    $('#msgs').append($('<div>').text(msg));
+  });
+
+  socket.on('history', function(replies){
+    for (var i in replies) {
+      var msg = replies[i];
+      $('#msgs').append($('<div>').text(msg));
+    };
+  });
+
+</script>
+</body>
+</html>
+
