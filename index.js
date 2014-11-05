@@ -19,8 +19,30 @@ io.on('connection', function(socket){
   client.get('app name', function(err, reply) {
     console.log('app name is', reply);
   });
-  client.hgetall('history', function(err, replies) {
-    socket.emit('history', replies);
+
+  // Return messages sorted by score desending
+  // and only return the last NUMBER_MESSAGES_TO_SHOW messages
+  var NUMBER_MESSAGES_TO_SHOW = 100;
+  client.zrevrangebyscore(
+    'history',
+    '+inf', 0, 'WITHSCORES',
+    'LIMIT', 0, NUMBER_MESSAGES_TO_SHOW,
+  function(err, results) {
+    if (err) throw err;
+
+    var messages = [];
+    // Loop, increasing i by two each time, up to the number of results
+    for (var i = 0; i < results.length; i = i+2) {
+      // Only append the message if it exists
+      if (results[i+1]) {
+        messages.push({
+          timestamp: results[i+1],
+          text: results[i]
+        });
+      }
+    }
+
+    socket.emit('history', messages);
   });
 
   console.log('a user connected');
@@ -29,10 +51,8 @@ io.on('connection', function(socket){
   });
   socket.on('talk', function(msg){
     console.log('talk: ' + msg);
-    socket.broadcast.emit('talk', msg);
-    client.incr('msg_id', function(err, msg_id) {
-      console.log('msg_id', msg_id);
-      client.hset('history', msg_id, msg);
+    client.zadd('history', Date.now(), msg, function(err) {
+      socket.broadcast.emit('talk', msg);
     });
   });
   socket.on('yell', function(msg){
