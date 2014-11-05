@@ -3,10 +3,8 @@
 <title>simple chat</title>
 </head>
 <body>
-<div id="msgs">
-  <div>hey</div>
-  <div>cool</div>
-</div>
+<ul id="msgs">
+</ul>
 <input type="text" id="newMsg">
 <!--
 <input type="button" value="send" onclick="addMessage();">
@@ -37,16 +35,20 @@
   });
 
   socket.on('talk', function(msg){
-    $('#msgs').append($('<div>').text(msg));
+    $('#msgs').append($('<li>').text(msg));
   });
 
   socket.on('history', function(replies){
+    var $msgs = $("#msgs");
+    $msgs.html('');
     for (var i in replies) {
       var msg = replies[i];
-      $('#msgs').append($('<div>').text(msg));
+      var text = msg.text;
+      var timestamp = new Date(parseInt(msg.timestamp, 10));
+      var message = timestamp.toUTCString() + ': ' + text;
+      $msgs.append($('<li>').text(message));
     };
   });
-
 </script>
 </body>
 </html>
